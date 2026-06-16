@@ -1,5 +1,5 @@
 <script>
-  import Map from '$lib/components/Map.svelte';
+  import Map from '$lib/components/map.svelte';
 
   // Start-Filter, Buttons und Wetterdaten
   let activeFilter = $state('Ort'); 
