@@ -1,20 +1,29 @@
-<!--
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
--->
-
 <script>
   import Map from '$lib/components/Map.svelte';
 
-  let activeFilter = $state('all'); // init state
-  const filters = ['alles', 'routen', 'attraktionen'];  // filters to change the website (weather needed here)
+  // Start-Filter, Buttons und Wetterdaten
+  let activeFilter = $state('Ort'); 
+  const filters = ['Ort', 'Route', 'Wetter'];
+
+  // Wetterdaten zum einfachen ändern in Skript verlagert
+  const weatherData = [
+    { month: 'Januar', temp: '2°C' },
+    { month: 'Februar', temp: '4°C' },
+    { month: 'März', temp: '9°C' },
+    { month: 'April', temp: '14°C' },
+    { month: 'Mai', temp: '19°C' },
+    { month: 'Juni', temp: '22°C' },
+    { month: 'Juli', temp: '25°C' },
+    { month: 'August', temp: '24°C' },
+    { month: 'September', temp: '19°C' }
+  ];
 </script>
 
 <div class="app">
   <aside class="sidebar">
     <h1>Bamberg Locations</h1>
 
-    <!-- builds the buttons dynamically -->
+    <!-- Kreirt die 3 Auswahlbuttons, setzt den geclickten auf "activeFilter" -> state!-->
     <div class="filters">
       {#each filters as filter}
         <button
@@ -26,16 +35,26 @@
       {/each}
     </div>
 
-    <ul class="list">
-      <li>Bamberger Dom</li>
-      <li>Fränkischer Gebirgsweg</li>
-      <li>Altes Rathaus</li>
-      <li>Regnitzradweg</li>
-    </ul>
+    <!--Liste aller Elemente in der GUI liste. Immer up to date halten!-->
+    {#if activeFilter === 'Ort'}
+      <ul class="list">
+        <li>Bamberger Dom</li>
+      </ul>
+    {:else if activeFilter === 'Route'}
+      <ul class="list">
+        <li>Erbaweg zum Schlenkerla</li>
+      </ul>
+    {:else if activeFilter === 'Wetter'}
+      <ul class="list">
+        {#each weatherData as w}
+          <li>{w.month}: {w.temp}</li>
+        {/each}
+      </ul>
+    {/if}
   </aside>
 
   <main class="map-container">
-    <Map />
+    <Map filter={activeFilter} />
   </main>
 </div>
 
@@ -45,7 +64,7 @@
     height: 100vh;
     width: 100vw;
     font-family: sans-serif;
-    overflow: hidden; /* Verhindert unschöne Scrollbalken am Rand */
+    overflow: hidden; 
   }
 
   .sidebar {
