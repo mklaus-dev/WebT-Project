@@ -1,9 +1,14 @@
 export const routes = [
   {
-    name: 'Wanderroute Wiai-Schlenkerla' ,
+    file: '/routes/Wiai-Schlenkerla.geojson' ,
     start: 'Wiai',
     end: 'Schlenkerla' ,
-    file: '/routes/Wiai-Schlenkerla.geojson' ,
+    description: 'Test'
+  },
+  {
+    file: '/routes/Wiai-Gutenbergstrasse.geojson' ,
+    start: 'Wiai',
+    end: 'Gutenbergstraße' ,
     description: 'Test'
   },
   {

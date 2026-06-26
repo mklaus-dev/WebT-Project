@@ -58,7 +58,7 @@
 
 
     // route logic
-} else if (filter === 'Route') {
+    } else if (filter === 'Route') {
       const r = routes[selectedIndex];
       if (!r) return;
 
@@ -68,7 +68,7 @@
       const routeEnd = r.end || 'Ziel';     // Fallback
       const routeDesc = r.description || ''; 
 
-      const routeName = `Wanderroute ${routeStart} → ${routeEnd}`;
+      const routeName = `${routeStart} → ${routeEnd}`;
 
       // Fallback i ncase reading JSON doesn't work
       if (r.file) {
