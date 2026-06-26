@@ -22,7 +22,7 @@
     L.Icon.Default.mergeOptions({ iconUrl: icon, iconRetinaUrl: iconRetina, shadowUrl: shadow });
 
     // Map Setup
-    map = L.map(mapEl).setView([49.8907, 10.88253], 15);
+    map = L.map(mapEl).setView([49.8907, 10.88253], 20);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(map);
@@ -50,6 +50,8 @@
     if (filter === 'Ort') {
       const l = locations[selectedIndex];
       if (!l) return;
+
+      map.flyTo([l.lat, l.lon], 16);
       
       L.marker([l.lat, l.lon])
         .addTo(markerGroup)
@@ -66,11 +68,11 @@
       // const routeName = r.name; 
       const routeStart = r.start || 'Start'; // Fallback
       const routeEnd = r.end || 'Ziel';     // Fallback
-      const routeDesc = r.description || ''; 
+      const routeDistance = r.distance || ''; 
 
       const routeName = `${routeStart} → ${routeEnd}`;
 
-      // Fallback i ncase reading JSON doesn't work
+      // Fallback in case reading JSON doesn't work
       if (r.file) {
         try {
           const response = await fetch(r.file);
@@ -90,7 +92,7 @@
       // Start-Marker
       L.marker(leafletCoords[0])
         .addTo(markerGroup)
-        .bindPopup(`<b>Start: ${routeStart}</b><br>${routeDesc}`);
+        .bindPopup(`<b>Start: ${routeStart}</b>`);
 
       // Ziel-Marker
       L.marker(leafletCoords[leafletCoords.length - 1])
@@ -100,10 +102,10 @@
       // Linie & Autofokus
       L.polyline(leafletCoords, { color: 'red', weight: 5, opacity: 0.7 })
         .addTo(markerGroup)
-        .bindPopup(`<div style="text-align: center;"><b>${routeName}</b><br>${routeDesc}</div>`)
+        .bindPopup(`<div style="text-align: center;"><b>${routeName}</b><br>${routeDistance}</div>`)
         .openPopup();
 
-      // Das hattest du aus Versehen gelöscht: Die Karte zentriert sich wieder auf die Route
+      // Karte zentriert sich auf Route
       map.fitBounds(leafletCoords);
     }
   }
