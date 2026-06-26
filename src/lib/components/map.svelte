@@ -21,7 +21,7 @@
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({ iconUrl: icon, iconRetinaUrl: iconRetina, shadowUrl: shadow });
 
-    // Map Setup -> imported
+    // Map Setup
     map = L.map(mapEl).setView([49.8907, 10.88253], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
@@ -31,40 +31,84 @@
     updateMarkers();
   });
 
-  function updateMarkers() {
-    // wait funktion, damit alles im vorraus lädt
+  // Hilfsfunktion: Konvertiert das BRouter-GeoJSON in das Leaflet-Array-Format
+  function extractCoordinatesFromGeoJSON(geoJson) {
+    const feature = geoJson.features[0];
+    if (!feature || !feature.geometry || !feature.geometry.coordinates) return [];
+    
+    // GeoJSON nutzt [lon, lat, ele]. Leaflet braucht [lat, lon].
+    return feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+  }
+
+  async function updateMarkers() {
+    // wait funktion, damit alles im voraus lädt
     if (!map || !L || !markerGroup) return;
     markerGroup.clearLayers();
 
-    // Bamberger Dom als beispiel für Ort -> später auslagern
+
+    // Sehenswürdigkeit logik
     if (filter === 'Ort') {
       const l = locations[selectedIndex];
+      if (!l) return;
+      
       L.marker([l.lat, l.lon])
         .addTo(markerGroup)
         .bindPopup(`<b>${l.name}</b><br>${l.description}`)
         .openPopup();
 
-    // Routen später in gpx Dateien auslagern
-    } else if (filter === 'Route') {
+
+    // route logic
+} else if (filter === 'Route') {
       const r = routes[selectedIndex];
+      if (!r) return;
+
+      let leafletCoords = [];
+      // const routeName = r.name; 
+      const routeStart = r.start || 'Start'; // Fallback
+      const routeEnd = r.end || 'Ziel';     // Fallback
+      const routeDesc = r.description || ''; 
+
+      const routeName = `Wanderroute ${routeStart} → ${routeEnd}`;
+
+      // Fallback i ncase reading JSON doesn't work
+      if (r.file) {
+        try {
+          const response = await fetch(r.file);
+          const geoJsonData = await response.json();
+          leafletCoords = extractCoordinatesFromGeoJSON(geoJsonData);
+        } catch (error) {
+          console.error("Fehler beim Laden der GeoJSON-Route:", error);
+          return;
+        }
+      } else if (r.coordinates) {
+        // Fallback für alte Einträge in routes.js
+        leafletCoords = r.coordinates;
+      }
+
+      if (leafletCoords.length === 0) return;
 
       // Start-Marker
-      L.marker(r.coordinates[0])
+      L.marker(leafletCoords[0])
         .addTo(markerGroup)
-        .bindPopup(`<b>Start: ${r.name}</b>`)
-        .openPopup();
+        .bindPopup(`<b>Start: ${routeStart}</b><br>${routeDesc}`);
 
       // Ziel-Marker
-      L.marker(r.coordinates[r.coordinates.length - 1])
+      L.marker(leafletCoords[leafletCoords.length - 1])
         .addTo(markerGroup)
-        .bindPopup(`<b>Ziel: ${r.name}</b>`);
+        .bindPopup(`<b>Ziel: ${routeEnd}</b>`);
 
       // Linie & Autofokus
-      L.polyline(r.coordinates, { color: 'red', weight: 5, opacity: 0.7 }).addTo(markerGroup);
-      map.fitBounds(r.coordinates);
+      L.polyline(leafletCoords, { color: 'red', weight: 5, opacity: 0.7 })
+        .addTo(markerGroup)
+        .bindPopup(`<div style="text-align: center;"><b>${routeName}</b><br>${routeDesc}</div>`)
+        .openPopup();
+
+      // Das hattest du aus Versehen gelöscht: Die Karte zentriert sich wieder auf die Route
+      map.fitBounds(leafletCoords);
     }
   }
 
+  // Svelte 5 Rune reagiert auf filter und selectedIndex Änderungen
   $effect(() => {
     updateMarkers(filter, selectedIndex);
   });
