@@ -63,6 +63,7 @@
         {/each}
       </ul>
     {:else if activeFilter === 'Wetter'}
+      Quelle: www.timeanddate.de
       <ul class="list">
         {#each weatherData as w, i (w.month || i)}
           <li class="weather-item">{w.month}: {w.temp}</li>
