@@ -1,22 +1,17 @@
 <script>
   import Map from '$lib/components/map.svelte';
+  import { weatherData } from '$lib/data/weather.js';
+  import { routes } from '$lib/data/routes.js';
+  import { locations } from '$lib/data/locations.js';
 
-  // Start-Filter, Buttons und Wetterdaten
-  let activeFilter = $state('Ort'); 
+  let activeFilter = $state('Ort');
+  let selectedIndex = $state(0);
   const filters = ['Ort', 'Route', 'Wetter'];
 
-  // Wetterdaten zum einfachen ändern in Skript verlagert
-  const weatherData = [
-    { month: 'Januar', temp: '2°C' },
-    { month: 'Februar', temp: '4°C' },
-    { month: 'März', temp: '9°C' },
-    { month: 'April', temp: '14°C' },
-    { month: 'Mai', temp: '19°C' },
-    { month: 'Juni', temp: '22°C' },
-    { month: 'Juli', temp: '25°C' },
-    { month: 'August', temp: '24°C' },
-    { month: 'September', temp: '19°C' }
-  ];
+  function setFilter(f) {
+    activeFilter = f;
+    selectedIndex = 0; // zurück auf erstes Element beim Wechsel
+  }
 </script>
 
 <div class="app">
@@ -27,8 +22,8 @@
     <div class="filters">
       {#each filters as filter}
         <button
-          class={activeFilter === filter ? 'active' : ''} 
-          onclick={() => activeFilter = filter}
+          class={activeFilter === filter ? 'active' : ''}
+          onclick={() => setFilter(filter)}
         >
           {filter}
         </button>
@@ -38,11 +33,19 @@
     <!--Liste aller Elemente in der GUI liste. Immer up to date halten!-->
     {#if activeFilter === 'Ort'}
       <ul class="list">
-        <li>Bamberger Dom</li>
+        {#each locations as l, i}
+          <li class={selectedIndex === i ? 'active' : ''} onclick={() => selectedIndex = i}>
+            {l.name}
+          </li>
+        {/each}
       </ul>
     {:else if activeFilter === 'Route'}
       <ul class="list">
-        <li>Erbaweg zum Schlenkerla</li>
+        {#each routes as r, i}
+          <li class={selectedIndex === i ? 'active' : ''} onclick={() => selectedIndex = i}>
+            {r.name}
+          </li>
+        {/each}
       </ul>
     {:else if activeFilter === 'Wetter'}
       <ul class="list">
@@ -54,7 +57,7 @@
   </aside>
 
   <main class="map-container">
-    <Map filter={activeFilter} />
+    <Map filter={activeFilter} selectedIndex={selectedIndex} />
   </main>
 </div>
 
@@ -64,9 +67,8 @@
     height: 100vh;
     width: 100vw;
     font-family: sans-serif;
-    overflow: hidden; 
+    overflow: hidden;
   }
-
   .sidebar {
     width: 260px;
     padding: 1rem;
@@ -77,17 +79,14 @@
     gap: 1rem;
     z-index: 1000; /* Damit die Sidebar über der Karte liegt, falls nötig */
   }
-
   h1 {
     font-size: 1.1rem;
     margin: 0;
   }
-
   .filters {
     display: flex;
     gap: 0.5rem;
   }
-
   button {
     flex: 1;
     padding: 0.4rem;
@@ -97,13 +96,11 @@
     cursor: pointer;
     font-size: 0.8rem;
   }
-
   button.active {
     background: #e8f5e9;
     border-color: #4caf50;
     font-weight: bold;
   }
-
   .list {
     list-style: none;
     padding: 0;
@@ -112,7 +109,6 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-
   .list li {
     padding: 0.5rem;
     border: 1px solid #eee;
@@ -120,14 +116,16 @@
     font-size: 0.9rem;
     cursor: pointer;
   }
-
   .list li:hover {
     background: #f5f5f5;
   }
-
+  .list li.active {
+    background: #e8f5e9;
+    border-color: #4caf50;
+  }
   .map-container {
     flex: 1;
-    height: 100vh; /* Erzwingt, dass die Karte Platz einnimmt */
+    height: 100%;
     position: relative;
   }
 </style>
