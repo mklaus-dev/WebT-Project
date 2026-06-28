@@ -1,6 +1,6 @@
 <script>
   import Map from '$lib/components/map.svelte';
-  import { weatherData } from '$lib/data/weather.js';
+  // import { weatherData } from '$lib/data/weather.js';
   import { routes } from '$lib/data/routes.js';
   import { locations } from '$lib/data/locations.js';
 
@@ -8,9 +8,24 @@
   let selectedIndex = $state(0);
   const filters = ['Ort', 'Route', 'Wetter'];
 
-  function setFilter(f) {
+  let liveWeather = $state(null);
+  let loadingWeather = $state(false);
+
+  async function setFilter(f) {
     activeFilter = f;
     selectedIndex = 0; // zurück auf erstes Element beim Wechsel
+
+    if (f === 'Wetter' && !liveWeather) {
+      loadingWeather = true;
+      try {
+        const response = await fetch('/api/weather'); // Aufruf unseres Backends
+        liveWeather = await response.json();
+      } catch (err) {
+        console.error("Backend nicht erreichbar:", err);
+      } finally {
+        loadingWeather = false;
+      }
+    }
   }
 </script>
 
@@ -63,11 +78,27 @@
         {/each}
       </ul>
     {:else if activeFilter === 'Wetter'}
-      Quelle: www.timeanddate.de
       <ul class="list">
-        {#each weatherData as w, i (w.month || i)}
-          <li class="weather-item">{w.month}: {w.temp}</li>
-        {/each}
+        {#if loadingWeather}
+          <li class="weather-info">Lade Live-Daten vom Backend...</li>
+        {:else if liveWeather && liveWeather.success}
+          <!-- Schleife durch die 7 Tage vom Backend -->
+          {#each liveWeather.forecast as w, i (w.date || i)}
+            <li>
+              <button 
+                class="weather-btn {w.isCurrent ? 'current-day' : ''}" 
+                type="button"
+              >
+                <div class="weather-row">
+                  <span class="weather-day">{w.day} <small>({w.date})</small></span>
+                  <span class="weather-temp">{w.temp}</span>
+                </div>
+              </button>
+            </li>
+          {/each}
+        {:else}
+          <li class="weather-info error">Fehler beim Laden der Backend-Daten.</li>
+        {/if}
       </ul>
     {/if}
   </aside>
@@ -155,18 +186,55 @@
     color: initial; /* Verhindert, dass der Button Standard-Textfarben erzwingt */
   }
 
-  /* Eigenes Styling für die Wetter-Liste, da hier nur Text ohne Buttons steht */
-  .weather-item {
-    padding: 0.5rem;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    font-size: 0.9rem;
-  }
-
   /* --- Karten-Container --- */
   .map-container {
     flex: 1;
     height: 100%;
     position: relative;
+  }
+
+  /* --- Zusätzliche Wetter-Styles --- */
+  
+  /* Basis-Layout für das Text-Innere des Wetter-Buttons */
+  .weather-row {
+    display: flex;
+    justify-content: space-between; /* Drückt Wochentag nach links, Gradzahl nach rechts */
+    align-items: center;
+    width: 100%;
+  }
+
+  .weather-day small {
+    color: #777;
+    font-size: 0.75rem;
+    margin-left: 0.2rem;
+  }
+
+  .weather-temp {
+    font-weight: bold;
+  }
+
+  /* Die farbliche Markierung für die "Aktuell / Heute" Zeile */
+  .list button.current-day {
+    background: #e3f2fd; /* Ein sanftes Info-Blau */
+    border-color: #2196f3;
+    color: #0d47a1;
+  }
+  
+  .list button.current-day:hover {
+    background: #bbdefb;
+  }
+
+  /* Styles für Lade- und Fehlermeldungen in der Liste */
+  .weather-info {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+  }
+  
+  .weather-info.error {
+    color: #d32f2f;
+    background: #ffebee;
+    border-radius: 6px;
   }
 </style>
