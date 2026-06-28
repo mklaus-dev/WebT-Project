@@ -82,7 +82,7 @@
         {#if loadingWeather}
           <li class="weather-info">Lade Live-Daten vom Backend...</li>
         {:else if liveWeather && liveWeather.success}
-          <!-- Schleife durch die 7 Tage vom Backend -->
+          <!-- Schleife durch die 7 Tage -->
           {#each liveWeather.forecast as w, i (w.date || i)}
             <li>
               <button 
@@ -100,6 +100,15 @@
           <li class="weather-info error">Fehler beim Laden der Backend-Daten.</li>
         {/if}
       </ul>
+
+      <!-- Das reduzierte Ampel-Textfeld direkt unter der Liste -->
+      {#if liveWeather && liveWeather.success && !loadingWeather}
+        <div class="weather-summary">
+          <div class="verdict {liveWeather.summary.status}">
+            {liveWeather.summary.verdictText}
+          </div>
+        </div>
+      {/if}
     {/if}
   </aside>
 
@@ -236,5 +245,40 @@
     color: #d32f2f;
     background: #ffebee;
     border-radius: 6px;
+  }
+
+  /* --- Styling für das Wetter-Fazit-Textfeld --- */
+  .weather-summary {
+    margin-top: 1rem;
+    /* Padding entfernt, damit die farbige Box die volle Breite nutzt */
+  }
+
+  .verdict {
+    font-size: 1.05rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 0.75rem 0.5rem; /* Etwas mehr vertikales Padding für bessere Lesbarkeit */
+    border-radius: 6px;
+  }
+
+  /* Grün (Ja) */
+  .verdict.good {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+
+  /* Rot (Nein) */
+  .verdict.bad {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
+
+  /* Gelb/Orange (Vielleicht) */
+  .verdict.maybe {
+    background: #fff3e0; /* Sanftes, unaufdringliches Orange-Gelb */
+    color: #e65100;
+    border: 1px solid #ffcc80;
   }
 </style>
